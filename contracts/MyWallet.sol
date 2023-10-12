@@ -5,7 +5,7 @@ contract MyWallet {
     error InsufficientBalance(uint available, uint required);
 
     address public owner;
-    uint public balances;
+    uint public restBalance;
 
     struct Allowance {
         uint amount;
@@ -23,21 +23,23 @@ contract MyWallet {
         owner = msg.sender;
     }
 
-    receive() external payable { }
+    receive() external payable {
+        restBalance += msg.value;
+     }
 
-    function deposit() public payable isOwner{
-        balances += msg.value;
+    function getBalance() public view returns(uint) {
+        return address(this).balance;
     }
 
     function setAllowance(address _to, uint _amount) public isOwner{
-        if (balances < _amount) {
+        if (restBalance < _amount) {
             revert InsufficientBalance({
-                available: balances,
+                available: restBalance,
                 required: _amount
             });
         }
 
-        balances -= _amount;
+        restBalance -= _amount;
 
         allowances[_to] = Allowance({
             updated: block.timestamp,
